@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 
 const SampleComponent = () => {
   const [exampleBoolean, setExampleBoolean] = useState(false)
@@ -7,9 +7,14 @@ const SampleComponent = () => {
     setExampleBoolean(true)
   }, [])
 
+  const memoized = useMemo(() => {
+    return !exampleBoolean
+  }, [exampleBoolean])
+
   useEffect(() => {
     console.log('Example boolean changed')
-  }, [exampleBoolean])
+    console.log('New memozied:', memoized)
+  }, [exampleBoolean, memoized])
   return (
     <div>
       <span>Hello, world</span>

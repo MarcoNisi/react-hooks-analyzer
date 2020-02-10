@@ -8,6 +8,8 @@ class Analyzer {
   private componentBody: ts.Block
   private stateElements: IStateElement[]
   private effectElements: IEffectElement[]
+  public supportedEffects: string[]
+  public effectsWithReturn: string[]
   constructor(sourcePath: string, componentName: string) {
     this.sourcePath = sourcePath
     this.componentName = componentName
@@ -22,6 +24,8 @@ class Analyzer {
     this.componentBody = this.getComponentBody()
     this.stateElements = []
     this.effectElements = []
+    this.supportedEffects = ['useEffect', 'useLayoutEffect', 'useMemo', 'useCallback']
+    this.effectsWithReturn = ['useMemo', 'useCallback']
   }
   getStateElements() {
     return this.stateElements
@@ -47,7 +51,7 @@ class Analyzer {
       return typedInitializer.body as ts.Block
     }
   }
-  collect() {
+  collectStatesAndEffects() {
     this.componentBody.statements.forEach(statement => this.collectFromStatement(statement))
   }
   collectFromStatement(statement: ts.Statement) {
@@ -80,7 +84,7 @@ class Analyzer {
               setter: stateSetter
             } as IStateElement)
 
-            const isBaseHook = ['useMemo', 'useCallback'].includes(typedIdentifier.text)
+            const isBaseHook = this.effectsWithReturn.includes(typedIdentifier.text)
             if (isBaseHook) {
               this.collectEffect(variableDeclaration.initializer)
             }
@@ -95,7 +99,7 @@ class Analyzer {
   collectEffect(callExpression: ts.CallExpression) {
     const typedIdentifier = callExpression.expression as ts.Identifier
     const expressionName = typedIdentifier.escapedText
-    if (['useEffect', 'useLayoutEffect', 'useMemo', 'useCallback'].includes(expressionName as string)) {
+    if (this.supportedEffects.includes(expressionName as string)) {
       let deps: string[] = []
       if (callExpression.arguments.length > 1) {
         deps = (callExpression.arguments[1] as ts.ArrayLiteralExpression).elements
