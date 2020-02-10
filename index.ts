@@ -24,14 +24,16 @@ sourceFile.statements.forEach(statement => {
       if (typedName.escapedText === name) {
         const typedInitializer = declaration.initializer as ts.ArrowFunction
         const stateVars = {}
-        const effects = [];
+        const effects = []
         const manageEffect = (callExpression: ts.CallExpression) => {
           const typedIdentifier = callExpression.expression as ts.Identifier
           const expressionName = typedIdentifier.escapedText
           if (['useEffect', 'useLayoutEffect', 'useMemo', 'useCallback'].includes(expressionName as string)) {
             let deps = null
             if (callExpression.arguments.length > 1) {
-              deps = (callExpression.arguments[1] as ts.ArrayLiteralExpression).elements.map(a => (a as ts.Identifier).escapedText).filter(e => !!e)
+              deps = (callExpression.arguments[1] as ts.ArrayLiteralExpression).elements
+                .map(a => (a as ts.Identifier).escapedText)
+                .filter(e => !!e)
             }
             const effectVar = {
               line: sourceFile.getLineAndCharacterOfPosition(typedIdentifier.pos).line + 1,
@@ -41,7 +43,7 @@ sourceFile.statements.forEach(statement => {
             effects.push(effectVar)
           }
         }
-        (typedInitializer.body as ts.Block).statements.forEach(statement => {
+        ;(typedInitializer.body as ts.Block).statements.forEach(statement => {
           if (ts.isVariableStatement(statement)) {
             const declarations = statement.declarationList.declarations
             if (declarations.length) {
@@ -55,14 +57,14 @@ sourceFile.statements.forEach(statement => {
                   let stateSetter = null
                   if (ts.isArrayBindingPattern(variableDeclaration.name)) {
                     const elements = variableDeclaration.name.elements
-                    stateValueIdentifier = ((elements[0] as ts.BindingElement).name as ts.Identifier)
+                    stateValueIdentifier = (elements[0] as ts.BindingElement).name as ts.Identifier
                     stateValue = stateValueIdentifier.text
                     if (elements.length > 1) {
-                      const stateSetterIdentifier = ((elements[1] as ts.BindingElement).name as ts.Identifier)
+                      const stateSetterIdentifier = (elements[1] as ts.BindingElement).name as ts.Identifier
                       stateSetter = stateSetterIdentifier.text
                     }
                   } else if (ts.isIdentifier(variableDeclaration.name)) {
-                    stateValueIdentifier = (variableDeclaration.name as ts.Identifier)
+                    stateValueIdentifier = variableDeclaration.name as ts.Identifier
                     stateValue = stateValueIdentifier.text
                   }
                   const stateVar = {
@@ -71,7 +73,6 @@ sourceFile.statements.forEach(statement => {
                     setter: stateSetter
                   }
                   stateVars[stateValue] = stateVar
-
 
                   const isBaseHook = ['useMemo', 'useCallback'].includes(typedIdentifier.text)
                   if (isBaseHook) {

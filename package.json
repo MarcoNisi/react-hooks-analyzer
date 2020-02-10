@@ -4,7 +4,9 @@
   "description": "React hooks analyzer",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch-ts": "./node_modules/.bin/tsc -w",
+    "build": "./node_modules/.bin/tsc"
   },
   "repository": {
     "type": "git",
@@ -20,9 +22,24 @@
   "bugs": {
     "url": "https://github.com/MarcoNisi/react-hooks-analyzer/issues"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
   "homepage": "https://github.com/MarcoNisi/react-hooks-analyzer#readme",
   "devDependencies": {
     "@types/node": "^13.7.0",
+    "@types/react": "^16.9.19",
+    "husky": "^4.2.1",
+    "lint-staged": "^10.0.7",
+    "prettier": "^1.19.1",
     "react": "^16.12.0",
     "typescript": "^3.7.5"
   }
