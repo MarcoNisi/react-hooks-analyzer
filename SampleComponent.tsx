@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-const Layout = () => {
+const SampleComponent = () => {
   const [exampleBoolean, setExampleBoolean] = useState(false)
 
   useEffect(() => {
@@ -10,9 +10,11 @@ const Layout = () => {
   useEffect(() => {
     console.log('Example boolean changed')
   }, [exampleBoolean])
-  return <div>
-    <span>Hello, world</span>
-  </div>
+  return (
+    <div>
+      <span>Hello, world</span>
+    </div>
+  )
 }
 
-export default Layout
+export default SampleComponent
