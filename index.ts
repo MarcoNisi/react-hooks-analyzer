@@ -15,6 +15,4 @@ const sourcePath = process.argv[2]
 const componentName = process.argv[3]
 
 const analyzer = new Analyzer(sourcePath, componentName)
-analyzer.collectStatesAndEffects()
-console.log(analyzer.getStateElements())
-console.log(analyzer.getEffectElements())
+analyzer.analyze()

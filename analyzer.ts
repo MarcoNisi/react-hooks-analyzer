@@ -100,18 +100,60 @@ class Analyzer {
     const typedIdentifier = callExpression.expression as ts.Identifier
     const expressionName = typedIdentifier.escapedText
     if (this.supportedEffects.includes(expressionName as string)) {
-      let deps: string[] = []
+      const effectElement: IEffectElement = {
+        line: this.sourceFile.getLineAndCharacterOfPosition(typedIdentifier.pos).line + 1,
+        uses: {
+          setters: [],
+          values: []
+        },
+        deps: [],
+        body: ts.createNodeArray(),
+        type: expressionName as IEffect
+      }
       if (callExpression.arguments.length > 1) {
-        deps = (callExpression.arguments[1] as ts.ArrayLiteralExpression).elements
+        const typedBody = (callExpression.arguments[0] as ts.ArrowFunction).body as ts.Block
+        effectElement.body = typedBody.statements
+        effectElement.deps = (callExpression.arguments[1] as ts.ArrayLiteralExpression).elements
           .map(a => (a as ts.Identifier).escapedText as string)
           .filter(e => !!e)
       }
-      this.effectElements.push({
-        line: this.sourceFile.getLineAndCharacterOfPosition(typedIdentifier.pos).line + 1,
-        deps,
-        type: expressionName as IEffect
-      } as IEffectElement)
+      this.effectElements.push(effectElement)
     }
+  }
+  collectDeepUses() {
+    this.effectElements.forEach(effect => {
+      this.collectUses(effect.body, effect)
+    })
+  }
+  collectUses(genericStatement: any, effect: IEffectElement) {
+    Object.keys(genericStatement).forEach(key => {
+      const identifier = genericStatement[key]
+      if (key === 'escapedText') {
+        if (this.stateElements.some(e => e.setter === identifier)) {
+          effect.uses.setters.push(identifier)
+        } else if (this.stateElements.some(e => e.value === identifier)) {
+          effect.uses.values.push(identifier)
+        }
+      } else if (typeof identifier === 'object') this.collectUses.call(this, identifier, effect)
+    })
+  }
+  connectDeps() {
+    this.effectElements.forEach(effect => {
+      this.stateElements
+        .filter(state => effect.deps.includes(state.value))
+        .forEach(state => {
+          this.effectElements.forEach(otherEffect => {
+            if (otherEffect.uses.setters.includes(state.setter)) {
+              console.log(`${effect.type} at line ${effect.line} depend on ${otherEffect.type} at line ${otherEffect.line}`)
+            }
+          })
+        })
+    })
+  }
+  analyze() {
+    this.collectStatesAndEffects()
+    this.collectDeepUses()
+    this.connectDeps()
   }
 }
 
